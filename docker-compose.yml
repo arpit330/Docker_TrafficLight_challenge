@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+
+  red-app:
+
+    build: ./red/Dockerfile
+    image: trafficlight/red:v1.0
+
+    networks:
+      traffic-light:
+        ipv4_address: 172.20.0.2
+
+  yellow-app:
+
+    build: ./yellow/Dockerfile
+    image: trafficlight/yellow:v1.0
+
+    networks:
+      traffic-light:
+        ipv4_address: 172.20.0.3
+
+  green-app:
+
+    build: ./green/Dockerfile
+    image: trafficlight/green:v1.0
+
+    networks:
+      traffic-light:
+        ipv4_address: 172.20.0.4
+
+  nginx-load-balancer:
+    image: nginx:1.21
+
+    ports:
+      - 80:80
+      - 3000:3000
+      - 4000:4000
+      - 5000:5000
+
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/
+      - /var/log/nginx/:/var/log/nginx/
+
+
+    networks:
+      traffic-light:
+        ipv4_address: 172.20.0.5
+
+    depends_on:
+      - red-app
+      - yellow-app
+      - green-app
+
+networks:
+  traffic-light:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
